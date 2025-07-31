@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Guide: CRM & Case Management Integration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The application is structured into thematic, scrollable sections to guide the user from high-level concepts to detailed implementation. The flow is: 1) Overview & Lifecycle, 2) Hybrid Model Comparison, 3) Client Journey (Portal & Forms), 4) System Architecture (Data Flow), 5) Standalone CRM Deep-Dive, and 6) Recommendations. This non-linear, thematic structure was chosen over the report's linear format to allow users to explore concepts based on interest (e.g., a business analyst might focus on the Client Journey, while a developer focuses on System Architecture). Interactive elements within each section (clickable diagrams, dynamic forms, filterable charts) are designed to make complex information digestible and engaging, promoting understanding through exploration rather than passive reading. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Legal Service Request Lifecycle -> Goal: Organize/Change -> Viz: Interactive HTML/CSS process flow -> Interaction: Click stage to show details in a modal -> Justification: Visually breaks down the complex process into manageable, explorable steps.
+        - Report Info: Integrated vs. Standalone Paradigms -> Goal: Compare -> Viz: Side-by-side cards with a toggle -> Interaction: Toggle highlights one paradigm and its description -> Justification: Provides a clear, direct comparison of the two core operational models.
+        - Report Info: Data Synchronization Matrix -> Goal: Relationships/Compare -> Viz: Interactive Bar Chart (Chart.js) -> Interaction: Buttons filter the chart to show sync type/direction for different data entities -> Justification: More dynamic and engaging than a static table, clearly visualizing the data flow concept.
+        - Report Info: Standalone CRM Data Model -> Goal: Organize/Relationships -> Viz: HTML/CSS entity-relationship diagram -> Interaction: Hovering over entities reveals tooltips with relationship details -> Justification: Simplifies a complex database concept into an easy-to-understand visual map.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8; /* Warm off-white */
+            color: #4A4A4A;
+        }
+        .nav-link {
+            position: relative;
+            transition: color 0.3s;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4A5568;
+            transition: width 0.3s;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #2D3748;
+        }
+        .nav-link.active::after, .nav-link:hover::after {
+            width: 100%;
+        }
+        .glass-modal {
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .lifecycle-stage {
+            transition: all 0.3s ease-in-out;
+        }
+        .lifecycle-stage:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .er-diagram-line {
+            position: absolute;
+            background-color: #CBD5E0;
+            z-index: -1;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header id="header" class="sticky top-0 z-50 bg-white/80 backdrop-blur-sm shadow-sm">
+        <div class="container mx-auto px-4">
+            <nav class="flex justify-between items-center py-4">
+                <h1 class="text-xl md:text-2xl font-bold text-gray-800">CRM & CM Integration Guide</h1>
+                <div class="hidden md:flex items-center space-x-8 text-gray-600 font-medium">
+                    <a href="#overview" class="nav-link active">Overview</a>
+                    <a href="#hybrid-model" class="nav-link">The Model</a>
+                    <a href="#client-journey" class="nav-link">Client Journey</a>
+                    <a href="#architecture" class="nav-link">Architecture</a>
+                    <a href="#standalone-hub" class="nav-link">Standalone Hub</a>
+                    <a href="#recommendations" class="nav-link">Recommendations</a>
+                </div>
+                <button id="mobile-menu-button" class="md:hidden p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                    </svg>
+                </button>
+            </nav>
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden md:hidden pb-4">
+                <a href="#overview" class="block py-2 px-4 text-sm nav-link">Overview</a>
+                <a href="#hybrid-model" class="block py-2 px-4 text-sm nav-link">The Model</a>
+                <a href="#client-journey" class="block py-2 px-4 text-sm nav-link">Client Journey</a>
+                <a href="#architecture" class="block py-2 px-4 text-sm nav-link">Architecture</a>
+                <a href="#standalone-hub" class="block py-2 px-4 text-sm nav-link">Standalone Hub</a>
+                <a href="#recommendations" class="block py-2 px-4 text-sm nav-link">Recommendations</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Section 1: Overview -->
+        <section id="overview" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-4 text-center">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">A Hybrid Ecosystem for Legal Service Management</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600 mb-12">
+                    This guide explores a flexible architecture for managing complex client interactions in the legal field. We'll break down how a Customer Relationship Management (CRM) system can work seamlessly with a Case Management (CM) system, or function as a powerful standalone tool. The goal is to enhance client satisfaction, streamline workflows, and ensure data integrity.
+                </p>
+                <h3 class="text-2xl font-semibold text-gray-700 mb-8">The Legal Service Request Lifecycle</h3>
+                <p class="max-w-2xl mx-auto text-gray-600 mb-12">Click on each stage to explore the system implications and legal context.</p>
+                <div class="flex flex-col md:flex-row items-center justify-center space-y-8 md:space-y-0 md:space-x-4">
+                    <!-- Lifecycle Stages -->
+                    <div class="lifecycle-stage-container w-full md:w-1/4" data-stage="1">
+                        <div class="lifecycle-stage cursor-pointer bg-gray-50 rounded-lg p-6 shadow-sm border border-gray-200 text-left">
+                            <div class="flex items-center mb-3">
+                                <span class="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100 text-blue-600 font-bold text-lg mr-4">1</span>
+                                <h4 class="font-semibold text-gray-800">Form Filled</h4>
+                            </div>
+                            <p class="text-sm text-gray-600">Client initiates contact via the customer portal to seek legal counsel.</p>
+                        </div>
+                    </div>
+                    <div class="text-gray-400 text-2xl hidden md:block">→</div>
+                    <div class="lifecycle-stage-container w-full md:w-1/4" data-stage="2">
+                        <div class="lifecycle-stage cursor-pointer bg-gray-50 rounded-lg p-6 shadow-sm border border-gray-200 text-left">
+                            <div class="flex items-center mb-3">
+                                <span class="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100 text-blue-600 font-bold text-lg mr-4">2</span>
+                                <h4 class="font-semibold text-gray-800">Meeting Scheduled</h4>
+                            </div>
+                            <p class="text-sm text-gray-600">A meeting is set with a Point of Contact (POC) to discuss requirements.</p>
+                        </div>
+                    </div>
+                    <div class="text-gray-400 text-2xl hidden md:block">→</div>
+                    <div class="lifecycle-stage-container w-full md:w-1/4" data-stage="3">
+                        <div class="lifecycle-stage cursor-pointer bg-gray-50 rounded-lg p-6 shadow-sm border border-gray-200 text-left">
+                            <div class="flex items-center mb-3">
+                                <span class="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100 text-blue-600 font-bold text-lg mr-4">3</span>
+                                <h4 class="font-semibold text-gray-800">Case Picked Up</h4>
+                            </div>
+                            <p class="text-sm text-gray-600">The request becomes a formal case in the Case Management system.</p>
+                        </div>
+                    </div>
+                    <div class="text-gray-400 text-2xl hidden md:block">→</div>
+                    <div class="lifecycle-stage-container w-full md:w-1/4" data-stage="4">
+                        <div class="lifecycle-stage cursor-pointer bg-gray-50 rounded-lg p-6 shadow-sm border border-gray-200 text-left">
+                            <div class="flex items-center mb-3">
+                                <span class="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100 text-blue-600 font-bold text-lg mr-4">4</span>
+                                <h4 class="font-semibold text-gray-800">Follow Up</h4>
+                            </div>
+                            <p class="text-sm text-gray-600">Auxiliary services are provided post-completion of the primary service.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Hybrid Model -->
+        <section id="hybrid-model" class="py-16 md:py-24">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">The Hybrid Operational Model</h2>
+                    <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                        The system is designed for flexibility, allowing it to operate in two distinct modes. This hybrid approach enables phased implementation, operational independence, and risk mitigation. Use the toggle to explore each paradigm.
+                    </p>
+                </div>
+                <div class="max-w-4xl mx-auto">
+                    <div class="flex items-center justify-center mb-8 space-x-4">
+                        <span class="font-medium text-gray-700">Integrated</span>
+                        <label for="model-toggle" class="flex items-center cursor-pointer">
+                            <div class="relative">
+                                <input type="checkbox" id="model-toggle" class="sr-only">
+                                <div class="block bg-gray-300 w-14 h-8 rounded-full"></div>
+                                <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition"></div>
+                            </div>
+                        </label>
+                        <span class="font-medium text-gray-500">Standalone</span>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- Integrated Card -->
+                        <div id="integrated-card" class="bg-white p-8 rounded-lg shadow-md border-2 border-blue-500 transition-all duration-300">
+                            <h3 class="text-2xl font-semibold text-gray-800 mb-4">🔗 Integrated Paradigm</h3>
+                            <p class="text-gray-600">
+                                In this model, the CRM and Case Management (CM) systems are interconnected, allowing for seamless, real-time data exchange. A service request in the CRM automatically creates a case in the CM, and status updates flow back. This provides a holistic 360-degree view of the client, automates workflows, and enhances overall efficiency.
+                            </p>
+                        </div>
+                        <!-- Standalone Card -->
+                        <div id="standalone-card" class="bg-white p-8 rounded-lg shadow-md border-2 border-transparent transition-all duration-300 opacity-60">
+                            <h3 class="text-2xl font-semibold text-gray-800 mb-4">🏠 Standalone Paradigm</h3>
+                            <p class="text-gray-600">
+                                Here, the CRM operates independently, managing all client interactions, service requests, and internal "cases" within its own environment. It serves as a comprehensive, self-contained hub for service management, equipped with advanced task management and workflow automation to handle the entire service lifecycle.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Client Journey -->
+        <section id="client-journey" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">The Client Journey: Portal & Data Collection</h2>
+                    <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                        The customer portal is the digital front door for clients. A well-designed service catalog and intelligent data collection are crucial for a smooth client experience and efficient internal processing. This section demonstrates how these components work together.
+                    </p>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-12 items-start">
+                    <div>
+                        <h3 class="text-2xl font-semibold text-gray-700 mb-6">1. Interactive Service Catalog</h3>
+                        <p class="text-gray-600 mb-6">A clear, searchable catalog allows clients to easily find and select the service they need. Click a service below to see how the data collection form adapts.</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="service-card cursor-pointer bg-gray-50 p-6 rounded-lg border-2 border-blue-500 shadow-sm" data-service="business">
+                                <h4 class="font-semibold text-gray-800">Business Formation</h4>
+                                <p class="text-sm text-gray-600 mt-1">Guidance on LLC vs. S-Corp, registration, and initial filings.</p>
+                            </div>
+                            <div class="service-card cursor-pointer bg-gray-50 p-6 rounded-lg border-2 border-gray-200" data-service="contract">
+                                <h4 class="font-semibold text-gray-800">Contract Review</h4>
+                                <p class="text-sm text-gray-600 mt-1">Analysis and negotiation of legal agreements and contracts.</p>
+                            </div>
+                            <div class="service-card cursor-pointer bg-gray-50 p-6 rounded-lg border-2 border-gray-200" data-service="ip">
+                                <h4 class="font-semibold text-gray-800">IP Protection</h4>
+                                <p class="text-sm text-gray-600 mt-1">Trademark and copyright registration and enforcement.</p>
+                            </div>
+                            <div class="service-card cursor-pointer bg-gray-50 p-6 rounded-lg border-2 border-gray-200" data-service="estate">
+                                <h4 class="font-semibold text-gray-800">Estate Planning</h4>
+                                <p class="text-sm text-gray-600 mt-1">Wills, trusts, and power of attorney documentation.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-gray-200 mt-8 lg:mt-0">
+                        <h3 class="text-2xl font-semibold text-gray-700 mb-6">2. Intelligent Data Collection Form</h3>
+                        <p class="text-gray-600 mb-6">This form dynamically changes based on your service selection, requesting only relevant information and pre-populating known data for a streamlined experience.</p>
+                        <form id="data-collection-form">
+                            <!-- Dynamic fields will be inserted here -->
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Architecture -->
+        <section id="architecture" class="py-16 md:py-24">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">System Architecture: Data Synchronization</h2>
+                    <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                        In an integrated model, the seamless flow of data between the CRM and CM systems is critical. This is achieved through data synchronization. The visualization below illustrates how different types of data move between the systems. Click the buttons to explore different data entities.
+                    </p>
+                </div>
+                <div class="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
+                    <div class="flex flex-wrap justify-center gap-2 mb-8">
+                        <button class="sync-btn active-sync-btn" data-entity="client">Client/Contact</button>
+                        <button class="sync-btn" data-entity="request">Service Request</button>
+                        <button class="sync-btn" data-entity="status">Status Updates</button>
+                        <button class="sync-btn" data-entity="docs">Documents</button>
+                    </div>
+                    <div class="grid md:grid-cols-5 gap-8 items-center">
+                        <div class="md:col-span-3">
+                            <div class="chart-container">
+                                <canvas id="syncChart"></canvas>
+                            </div>
+                        </div>
+                        <div id="sync-explanation" class="md:col-span-2 text-gray-600">
+                            <!-- Explanation text updated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Standalone Hub -->
+        <section id="standalone-hub" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">The CRM as a Standalone Service Hub</h2>
+                    <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                        When operating independently, the CRM relies on a robust internal data model to manage the entire service lifecycle. This diagram shows how a central "Service Request" object connects to other core CRM entities. Hover over an entity to see its relationship.
+                    </p>
+                </div>
+                <div class="relative max-w-4xl mx-auto p-8 bg-gray-50 rounded-lg border border-gray-200">
+                    <!-- ER Diagram Lines -->
+                    <div id="line-contact" class="er-diagram-line"></div>
+                    <div id="line-task" class="er-diagram-line"></div>
+                    <div id="line-comm" class="er-diagram-line"></div>
+                    <div id="line-doc" class="er-diagram-line"></div>
+
+                    <div class="relative grid grid-cols-3 grid-rows-3 gap-x-8 gap-y-12 items-center">
+                        <div id="er-contact" class="er-entity col-start-1 row-start-1" data-info="One Client can have Many Service Requests.">
+                            <h4 class="font-semibold">👤 Contact/Client</h4>
+                            <p class="text-xs">Name, Email, Phone</p>
+                        </div>
+                        <div id="er-task" class="er-entity col-start-1 row-start-3" data-info="One Service Request can have Many Tasks.">
+                            <h4 class="font-semibold">📋 Task</h4>
+                            <p class="text-xs">Subject, Due Date, Status</p>
+                        </div>
+
+                        <div id="er-request" class="er-entity col-start-2 row-start-2 bg-blue-100 border-blue-400" data-info="The central custom object for tracking each client inquiry.">
+                            <h4 class="font-semibold">✨ Service Request</h4>
+                            <p class="text-xs">ID, Status, Priority, Type</p>
+                        </div>
+
+                        <div id="er-comm" class="er-entity col-start-3 row-start-1" data-info="One Service Request can have Many Communications.">
+                            <h4 class="font-semibold">💬 Communication</h4>
+                            <p class="text-xs">Notes, Emails, Calls</p>
+                        </div>
+                        <div id="er-doc" class="er-entity col-start-3 row-start-3" data-info="One Service Request can have Many Documents.">
+                            <h4 class="font-semibold">📎 Document</h4>
+                            <p class="text-xs">File Name, Type, Date</p>
+                        </div>
+                    </div>
+                    <div id="er-tooltip" class="absolute hidden bg-gray-800 text-white text-xs rounded py-1 px-2 z-20"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 6: Recommendations -->
+        <section id="recommendations" class="py-16 md:py-24">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Key Recommendations</h2>
+                    <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                        Implementing this hybrid ecosystem requires a strategic approach. Here are the key takeaways and actionable recommendations from the report.
+                    </p>
+                </div>
+                <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex items-start space-x-4">
+                        <span class="text-2xl">💡</span>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Prioritize a Client-Centric Portal</h4>
+                            <p class="text-gray-600 mt-1">Invest in an intuitive, secure portal with a clear service catalog to empower clients and reduce internal workload.</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex items-start space-x-4">
+                        <span class="text-2xl">📝</span>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Implement Intelligent Data Collection</h4>
+                            <p class="text-gray-600 mt-1">Use dynamic, contextual forms to minimize client effort while capturing high-quality data to fuel workflows.</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex items-start space-x-4">
+                        <span class="text-2xl">🔄</span>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Establish Robust Data Sync</h4>
+                            <p class="text-gray-600 mt-1">Define clear one-way and two-way synchronization rules to ensure data integrity between systems.</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex items-start space-x-4">
+                        <span class="text-2xl">☁️</span>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Leverage iPaaS for Integration</h4>
+                            <p class="text-gray-600 mt-1">Opt for a scalable Integration Platform as a Service (iPaaS) for stable, API-level connections.</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex items-start space-x-4">
+                        <span class="text-2xl">🏠</span>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Design for Standalone Functionality</h4>
+                            <p class="text-gray-600 mt-1">Structure the CRM's internal data model with a custom "Service Request" object to manage the full lifecycle independently.</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex items-start space-x-4">
+                        <span class="text-2xl">🔒</span>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Embed Security from Inception</h4>
+                            <p class="text-gray-600 mt-1">Make security non-negotiable, with MFA, encryption, and audit trails built-in from the start.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal for Lifecycle Stages -->
+    <div id="lifecycle-modal" class="fixed inset-0 z-50 items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black/50"></div>
+        <div class="relative glass-modal w-11/12 max-w-2xl mx-auto my-12 p-8 rounded-lg shadow-2xl">
+            <button id="close-modal" class="absolute top-4 right-4 text-gray-600 hover:text-gray-900">&times;</button>
+            <h3 id="modal-title" class="text-2xl font-bold text-gray-800 mb-4"></h3>
+            <div id="modal-content" class="text-gray-700 space-y-4"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sections = document.querySelectorAll('main section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            mobileMenu.addEventListener('click', (event) => {
+                if (event.target.tagName === 'A') {
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: '-50% 0px -50% 0px' });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            // Lifecycle Modal Logic
+            const lifecycleStages = document.querySelectorAll('.lifecycle-stage-container');
+            const modal = document.getElementById('lifecycle-modal');
+            const closeModalBtn = document.getElementById('close-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalContent = document.getElementById('modal-content');
+
+            const stageData = {
+                '1': {
+                    title: 'Stage 1: Form Filled',
+                    content: `
+                        <p><strong>Description:</strong> A client initiates contact with the law firm to seek legal counsel through a remote channel, most likely the CRM customer portal.</p>
+                        <p><strong>System Implication:</strong> This is the primary entry point for a "Service Request" within the CRM. The customer portal must offer a clear, intuitive, and accessible mechanism for clients to submit their initial inquiry.</p>
+                        <p><strong>Legal Context:</strong> At this juncture, the form would typically capture essential client identification details, the specific type of legal matter, and a concise description of the issue. Security and confidentiality are paramount from this first interaction.</p>
+                    `
+                },
+                '2': {
+                    title: 'Stage 2: Meeting Scheduled',
+                    content: `
+                        <p><strong>Description:</strong> Following the initial inquiry, a meeting is scheduled with a designated Point of Contact (POC) at a mutually convenient time to discuss detailed requirements.</p>
+                        <p><strong>System Implication:</strong> The CRM should facilitate efficient appointment scheduling, linked directly to the client and their service request. Meeting notes and refined requirements must be captured accurately.</p>
+                        <p><strong>Legal Context:</strong> This stage often involves crucial steps such as conflict checks, providing initial legal advice, and more extensive, secure information gathering.</p>
+                    `
+                },
+                '3': {
+                    title: 'Stage 3: Case Picked Up in CM',
+                    content: `
+                        <p><strong>Description:</strong> The client's request formally transitions into an active legal case. A new case is created within the Case Management (CM) system.</p>
+                        <p><strong>System Implication (Integrated):</strong> This is a pivotal integration point. Service request data flows from CRM to CM. Status updates from the CM must sync back to the CRM for client visibility.</p>
+                        <p><strong>System Implication (Standalone):</strong> The "Service Request" record in the CRM is updated to an active "case" status, with internal workflows and tasks initiated directly within the CRM.</p>
+                    `
+                },
+                '4': {
+                    title: 'Stage 4: Follow Up',
+                    content: `
+                        <p><strong>Description:</strong> Following the successful completion of a primary service, the law firm may provide additional, auxiliary services like negotiation or ongoing case management.</p>
+                        <p><strong>System Implication:</strong> The CRM must be capable of tracking these additional services, linking them accurately to the original case or service request, and managing all associated tasks, communications, and documents.</p>
+                        <p><strong>Legal Context:</strong> This highlights the iterative and often long-term nature of legal services, necessitating robust linking of all activities to the primary client and matter for a comprehensive, auditable record.</p>
+                    `
+                }
+            };
+
+            lifecycleStages.forEach(stage => {
+                stage.addEventListener('click', () => {
+                    const stageId = stage.dataset.stage;
+                    modalTitle.textContent = stageData[stageId].title;
+                    modalContent.innerHTML = stageData[stageId].content;
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                });
+            });
+
+            const hideModal = () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            };
+
+            closeModalBtn.addEventListener('click', hideModal);
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    hideModal();
+                }
+            });
+
+            // Hybrid Model Toggle
+            const modelToggle = document.getElementById('model-toggle');
+            const integratedCard = document.getElementById('integrated-card');
+            const standaloneCard = document.getElementById('standalone-card');
+            const toggleDot = modelToggle.nextElementSibling.nextElementSibling;
+            
+            modelToggle.addEventListener('change', () => {
+                if (modelToggle.checked) { // Standalone selected
+                    integratedCard.classList.add('opacity-60');
+                    integratedCard.classList.remove('border-blue-500');
+                    integratedCard.classList.add('border-transparent');
+                    standaloneCard.classList.remove('opacity-60');
+                    standaloneCard.classList.add('border-blue-500');
+                    standaloneCard.classList.remove('border-transparent');
+                    toggleDot.style.transform = 'translateX(100%)';
+                } else { // Integrated selected
+                    integratedCard.classList.remove('opacity-60');
+                    integratedCard.classList.add('border-blue-500');
+                    integratedCard.classList.remove('border-transparent');
+                    standaloneCard.classList.add('opacity-60');
+                    standaloneCard.classList.remove('border-blue-500');
+                    standaloneCard.classList.add('border-transparent');
+                    toggleDot.style.transform = 'translateX(0)';
+                }
+            });
+
+            // Dynamic Form Logic
+            const serviceCards = document.querySelectorAll('.service-card');
+            const formContainer = document.getElementById('data-collection-form');
+
+            const formTemplates = {
+                business: `
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="business-type">Desired Business Type</label>
+                        <select id="business-type" class="w-full p-2 border border-gray-300 rounded-md">
+                            <option>LLC (Limited Liability Company)</option>
+                            <option>S-Corporation</option>
+                            <option>C-Corporation</option>
+                            <option>Sole Proprietorship</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="founders">Number of Founders</label>
+                        <input type="number" id="founders" value="1" class="w-full p-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="description">Brief Description</label>
+                        <textarea id="description" rows="3" class="w-full p-2 border border-gray-300 rounded-md" placeholder="Describe your business concept..."></textarea>
+                    </div>
+                `,
+                contract: `
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="contract-type">Type of Contract</label>
+                        <input type="text" id="contract-type" class="w-full p-2 border border-gray-300 rounded-md" placeholder="e.g., Employment Agreement, NDA">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="parties">Other Parties Involved</label>
+                        <input type="text" id="parties" class="w-full p-2 border border-gray-300 rounded-md" placeholder="Company/Individual Name">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="upload">Upload Document for Review</label>
+                        <input type="file" id="upload" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    </div>
+                `,
+                ip: `
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="ip-type">Type of Intellectual Property</label>
+                        <select id="ip-type" class="w-full p-2 border border-gray-300 rounded-md">
+                            <option>Trademark</option>
+                            <option>Copyright</option>
+                            <option>Patent (Consultation)</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="name-work">Name or Work to Protect</label>
+                        <input type="text" id="name-work" class="w-full p-2 border border-gray-300 rounded-md" placeholder="e.g., 'My Awesome Brand', 'My Novel Title'">
+                    </div>
+                `,
+                estate: `
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="plan-type">Planning Service</label>
+                        <select id="plan-type" class="w-full p-2 border border-gray-300 rounded-md">
+                            <option>Will Creation</option>
+                            <option>Trust Setup</option>
+                            <option>Power of Attorney</option>
+                            <option>General Consultation</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="marital-status">Marital Status</label>
+                        <select id="marital-status" class="w-full p-2 border border-gray-300 rounded-md">
+                            <option>Single</option>
+                            <option>Married</option>
+                            <option>Divorced</option>
+                            <option>Widowed</option>
+                        </select>
+                    </div>
+                `
+            };
+            
+            function updateForm(service) {
+                formContainer.innerHTML = formTemplates[service] || '<p>Select a service to see the relevant form.</p>';
+            }
+
+            serviceCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    serviceCards.forEach(c => {
+                        c.classList.remove('border-blue-500');
+                        c.classList.add('border-gray-200');
+                    });
+                    card.classList.add('border-blue-500');
+                    card.classList.remove('border-gray-200');
+                    updateForm(card.dataset.service);
+                });
+            });
+            updateForm('business');
+
+            // Chart.js Logic
+            const syncButtons = document.querySelectorAll('.sync-btn');
+            const syncExplanation = document.getElementById('sync-explanation');
+            const ctx = document.getElementById('syncChart').getContext('2d');
+            let syncChart;
+
+            const chartData = {
+                client: {
+                    labels: ['CRM', 'CM'],
+                    datasets: [{
+                        label: 'Client Data Sync',
+                        data: [100, 100],
+                        backgroundColor: ['#60A5FA', '#60A5FA'],
+                        borderColor: ['#3B82F6', '#3B82F6'],
+                        borderWidth: 1
+                    }],
+                    explanation: `
+                        <h4 class="font-semibold text-lg mb-2">🔄 Two-Way Sync</h4>
+                        <p>Core client information (name, contact details) is kept consistent across both systems. While the CRM is typically the primary source of truth, updates can flow in both directions to ensure a single, unified client profile.</p>
+                    `
+                },
+                request: {
+                    labels: ['CRM', 'CM'],
+                    datasets: [{
+                        label: 'Initial Request',
+                        data: [100, 0],
+                        backgroundColor: '#60A5FA',
+                    }, {
+                        label: 'Status Update',
+                        data: [0, 100],
+                        backgroundColor: '#93C5FD',
+                    }],
+                    explanation: `
+                        <h4 class="font-semibold text-lg mb-2">➡️ One-Way (Initial) & ⬅️ One-Way (Status)</h4>
+                        <p>The initial service request details flow one-way from CRM to CM to create a case. Subsequently, status updates from the CM flow back to the CRM to provide client visibility via the portal.</p>
+                    `
+                },
+                status: {
+                    labels: ['CRM', 'CM'],
+                    datasets: [{
+                        label: 'Status Update Flow',
+                        data: [0, 100],
+                        backgroundColor: ['#93C5FD', '#60A5FA'],
+                    }],
+                    explanation: `
+                        <h4 class="font-semibold text-lg mb-2">⬅️ One-Way Sync (CM to CRM)</h4>
+                        <p>To ensure client transparency, all case progress updates (e.g., 'in progress', 'resolved') are made in the CM system and automatically pushed to the CRM. This keeps the client portal's status tracker accurate and up-to-date in real-time.</p>
+                    `
+                },
+                docs: {
+                    labels: ['CRM', 'CM'],
+                    datasets: [{
+                        label: 'Document Sync',
+                        data: [100, 100],
+                        backgroundColor: ['#60A5FA', '#60A5FA'],
+                    }],
+                    explanation: `
+                        <h4 class="font-semibold text-lg mb-2">🔄 Two-Way Sync</h4>
+                        <p>Secure document sharing is vital. Documents uploaded by the client in the CRM portal or generated within the CM system are synchronized between both platforms to ensure all parties have access to a complete, consistent, and auditable record.</p>
+                    `
+                }
+            };
+
+            function renderChart(entity) {
+                if (syncChart) {
+                    syncChart.destroy();
+                }
+                syncExplanation.innerHTML = chartData[entity].explanation;
+                syncChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: chartData[entity],
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                stacked: true,
+                                display: false,
+                            },
+                            y: {
+                                stacked: true,
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 14,
+                                        weight: 'bold'
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                enabled: false
+                            }
+                        }
+                    }
+                });
+            }
+
+            syncButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    syncButtons.forEach(btn => btn.classList.remove('active-sync-btn'));
+                    button.classList.add('active-sync-btn');
+                    renderChart(button.dataset.entity);
+                });
+            });
+
+            renderChart('client');
+            
+            // ER Diagram Logic
+            const erEntities = document.querySelectorAll('.er-entity');
+            const erTooltip = document.getElementById('er-tooltip');
+            
+            erEntities.forEach(entity => {
+                entity.addEventListener('mousemove', (e) => {
+                    erTooltip.textContent = entity.dataset.info;
+                    erTooltip.style.display = 'block';
+                    // Position tooltip relative to the main container
+                    const mainRect = entity.parentElement.parentElement.getBoundingClientRect();
+                    erTooltip.style.left = `${e.clientX - mainRect.left + 15}px`;
+                    erTooltip.style.top = `${e.clientY - mainRect.top + 15}px`;
+                });
+                entity.addEventListener('mouseleave', () => {
+                    erTooltip.style.display = 'none';
+                });
+            });
+
+            function drawERLines() {
+                const request = document.getElementById('er-request');
+                const contact = document.getElementById('er-contact');
+                const task = document.getElementById('er-task');
+                const comm = document.getElementById('er-comm');
+                const doc = document.getElementById('er-doc');
+
+                const lineContact = document.getElementById('line-contact');
+                const lineTask = document.getElementById('line-task');
+                const lineComm = document.getElementById('line-comm');
+                const lineDoc = document.getElementById('line-doc');
+
+                const connect = (line, el1, el2) => {
+                    const rect1 = el1.getBoundingClientRect();
+                    const rect2 = el2.getBoundingClientRect();
+                    const containerRect = el1.parentElement.getBoundingClientRect();
+
+                    const x1 = rect1.left + rect1.width / 2 - containerRect.left;
+                    const y1 = rect1.top + rect1.height / 2 - containerRect.top;
+                    const x2 = rect2.left + rect2.width / 2 - containerRect.left;
+                    const y2 = rect2.top + rect2.height / 2 - containerRect.top;
+
+                    const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+                    const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+                    
+                    line.style.width = `${length}px`;
+                    line.style.height = '2px';
+                    line.style.top = `${y1}px`;
+                    line.style.left = `${x1}px`;
+                    line.style.transformOrigin = '0 0';
+                    line.style.transform = `rotate(${angle}deg)`;
+                };
+
+                connect(lineContact, contact, request);
+                connect(lineTask, task, request);
+                connect(lineComm, comm, request);
+                connect(lineDoc, doc, request);
+            }
+            
+            // Initial draw and redraw on resize
+            drawERLines();
+            new ResizeObserver(drawERLines).observe(document.getElementById('standalone-hub'));
+        });
+    </script>
+    <style>
+        .active-sync-btn {
+            background-color: #3B82F6;
+            color: white;
+        }
+        .sync-btn {
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-weight: 500;
+            transition: all 0.2s;
+            background-color: #E5E7EB;
+            color: #4B5563;
+        }
+        .sync-btn:hover {
+            background-color: #D1D5DB;
+        }
+        .er-entity {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #E5E7EB;
+            text-align: center;
+            cursor: help;
+            transition: all 0.2s;
+        }
+        .er-entity:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            border-color: #9CA3AF;
+        }
+    </style>
+</body>
+</html>
